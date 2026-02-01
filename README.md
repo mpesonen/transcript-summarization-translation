@@ -10,8 +10,9 @@ Frontend built with React + MUI, backend with FastAPI.
 - Paste or drop transcript text files for summarization
 - Choose summary tonality, styling, and target language
 - Select LLM provider: OpenAI or Google Gemini
-- Caches input and theme preference in local storage
+- Caches input and theme preference in local storage (not on server for cybersecurity reasons)
 - Responsive UI with dark/light mode
+- Finnish SSNs are checked for in the input and disallowed (naive PHI/PII validation)
 
 ---
 
@@ -24,17 +25,17 @@ transcript-summarization-translation/
 │   │   ├── api/
 │   │   │   └── main.py         # FastAPI app & endpoints
 │   │   └── config.py           # Pydantic settings
-│   └── tests/
-│       └── test_api.py         # API tests
+│   ├── tests/
+│   │   └── test_api.py         # API tests
+│   ├── pyproject.toml          # Python dependencies (uv)
+│   └── .env                    # API keys (not committed)
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx             # Main React app
 │   │   └── services/api.ts     # API call helpers
-│   └── public/
-│       └── ...                 # Static assets
-├── .env                        # API keys & config (not committed)
-├── README.md
-└── ...
+│   └── package.json            # Node dependencies
+├── Dockerfile                  # Multi-stage build for deployment
+└── README.md
 ```
 
 ---
@@ -50,30 +51,24 @@ cd transcript-summarization-translation
 
 ### 2. Backend Setup
 
-- Python 3.10+ recommended
-- Create and activate a virtual environment:
+**Prerequisites:** Python 3.13+ and [uv](https://docs.astral.sh/uv/) installed.
 
 ```sh
 cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
 
-- Create a `.env` file in `backend/`:
+Create a `.env` file in `backend/`:
 
 ```
 OPENAI_API_KEY=sk-...
 GOOGLE_API_KEY=...
-LLM_MODEL_OPENAI=gpt-3.5-turbo
-LLM_MODEL_GOOGLE=gemini-pro
-CORS_ORIGINS=http://localhost:5173
 ```
 
-- Start the FastAPI server:
+Start the FastAPI server:
 
 ```sh
-uvicorn src.api.main:app --reload
+uv run uvicorn src.api.main:app --reload
 ```
 
 ### 3. Frontend Setup
@@ -103,20 +98,35 @@ npm run dev
 3. Click **Submit** to get a summarized/translated output.
 4. Switch between dark/light mode as preferred.
 
-## Note
-
-Finnish SSNs are checked for in the input.
 
 ---
 
 ## Testing
 
-- Backend:  
-  Run API tests with pytest:
-  ```sh
-  cd backend
-  pytest
-  ```
+Run backend tests with pytest:
+
+```sh
+cd backend
+uv run pytest
+```
+
+---
+
+## Docker Deployment
+
+Build and run the application in a single container:
+
+```sh
+docker build -t transcript-summarizer .
+docker run -p 8000:8000 \
+  -e OPENAI_API_KEY=your-key \
+  -e GOOGLE_API_KEY=your-key \
+  transcript-summarizer
+```
+
+Open [http://localhost:8000](http://localhost:8000) - both frontend and API are served from the same container.
+
+For AWS App Runner deployment, see the [deployment plan](.claude/plans/quizzical-stargazing-thompson.md).
 
 ---
 
