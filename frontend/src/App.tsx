@@ -11,11 +11,18 @@ const darkTheme = createTheme({
   },
 });
 
+const lightTheme = createTheme({
+  palette: {
+    mode: 'light',
+  },
+});
+
 function App() {
   const [language, setLanguage] =  React.useState('English');
   const [translate, setTranslate] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [summary, setSummary] = React.useState<string | null>(null);
+  const [theme, setTheme] = React.useState(true);
 
   // Input text caching in LocalStorage (survives page reloads)
   const setInputToLocalStorage = (input: string) => {
@@ -46,9 +53,20 @@ function App() {
     }
   };
 
+  const handleClearInput = () => {
+    const inputField = document.getElementById('inputField') as HTMLInputElement;
+    inputField.value = '';
+    setInputToLocalStorage('');
+    setSummary(null);
+  }
+
+  const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTheme(event.target.checked);
+  }
+
   return (
     <>
-      <ThemeProvider theme={darkTheme}>
+      <ThemeProvider theme={theme ? darkTheme : lightTheme}>
         <CssBaseline />
         <h1>Transcript Summarizer & Translator</h1>
 
@@ -60,7 +78,7 @@ function App() {
                 control={<Switch checked={translate} onChange={(e) => setTranslate(e.target.checked)} />}
                 label="Translate"
               />
-            </FormGroup>
+            </FormGroup>            
             <Select
               labelId="translate-select-label"
               id="translate-select"
@@ -70,10 +88,12 @@ function App() {
               onChange={(e) => setLanguage(e.target.value as string)}
               disabled={!translate}
             >
-              <MenuItem value={'English'}>English</MenuItem>
-              <MenuItem value={'Finnish'}>Finnish</MenuItem>
-              <MenuItem value={'Swedish'}>Swedish</MenuItem>
-              <MenuItem value={'Spanish'}>Spanish</MenuItem>
+              <MenuItem value={'English'}>🇬🇧 English</MenuItem>
+              <MenuItem value={'Finnish'}>🇫🇮 Finnish</MenuItem>
+              <MenuItem value={'Swedish'}>🇸🇪 Swedish</MenuItem>
+              <MenuItem value={'Spanish'}>🇪🇸 Spanish</MenuItem>
+              <MenuItem value={'French'}>🇫🇷 French</MenuItem>
+              <MenuItem value={'German'}>🇩🇪 German</MenuItem>
             </Select>
           </Box>
 
@@ -87,28 +107,38 @@ function App() {
             onChange={(e) => setInputToLocalStorage(e.target.value as string)}
           />
 
-          {summary && (
-            <TextField
-              id="outputField"
-              label="Summary"
-              variant="outlined"
-              multiline
-              rows={8}
-              fullWidth
-              value={summary}
-              margin="normal"
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-          )}
-
           <Box className="submit-row">
+            <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading}>
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Clear'}
+            </Button>
             <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
             </Button>
           </Box>
         </Box>
+
+        {summary && (
+          <TextField
+            id="outputField"
+            label="Summary"
+            variant="outlined"
+            multiline
+            rows={8}
+            fullWidth
+            value={summary}
+            margin="normal"
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+        )}
+
+        <FormGroup>
+          <FormControlLabel
+            control={<Switch checked={theme} onChange={handleThemeChange} />}
+            label="Dark Mode"
+          />
+        </FormGroup>
       </ThemeProvider>
     </>
   )
