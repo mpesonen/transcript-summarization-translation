@@ -120,13 +120,16 @@ Run the frontend (Nginx) and backend (FastAPI) as separate services with Docker 
 
 ```sh
 cp backend/.env.example backend/.env   # then update the keys
+# Optional: echo "FRONTEND_PORT=80" >> .env   # host port for the frontend container
 docker compose up --build
 ```
 
-- Frontend: [http://localhost:8080](http://localhost:8080)
+- Frontend: [http://localhost:8080](http://localhost:8080) (set `FRONTEND_PORT=80` in `.env` to expose port 80 instead)
 - Backend API (optional direct access): [http://localhost:8000/health](http://localhost:8000/health)
 
 The frontend container serves the compiled React app and proxies `/api/*` requests to the backend service, so the browser never needs to reach port 8000 directly.
+
+> ℹ️ The root-level `.env` file is used only by Docker Compose (e.g., `FRONTEND_PORT=80`). Application secrets stay in `backend/.env`.
 
 ---
 
@@ -154,6 +157,7 @@ You can run the same Docker Compose stack on a small EC2 instance instead of App
    git clone https://github.com/yourusername/transcript-summarization-translation.git
    cd transcript-summarization-translation
    cp backend/.env.example backend/.env   # add your production secrets
+   echo "FRONTEND_PORT=80" > .env        # optional: front container listens on host port 80
    docker compose up --build -d
    ```
 4. **Expose traffic**

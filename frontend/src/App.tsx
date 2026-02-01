@@ -4,6 +4,7 @@ import './App.css'
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import React from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const darkTheme = createTheme({
   palette: {
@@ -34,6 +35,7 @@ function App() {
   const [tonality, setTonality] = React.useState('Formal');
   const [styling, setStyling] = React.useState('Paragraph');
   const [modelProvider, setModelProvider] = React.useState('openai');
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Input text caching in LocalStorage (survives page reloads)
   const setInputToLocalStorage = (input: string) => {
@@ -112,8 +114,8 @@ function App() {
         <h1>Transcript Summarizer & Translator</h1>
 
         <Box className="form-container">
-          <Box className="controls-row">
-            <FormGroup row>
+          <Box className="controls-row" sx={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 1 : 2 }}>
+            <FormGroup row={!isMobile} sx={{ width: isMobile ? '100%' : 'auto' }}>
               <FormControlLabel
                 id="translate-checkbox"
                 control={<Switch checked={translate} onChange={(e) => setTranslate(e.target.checked)} />}
@@ -129,6 +131,8 @@ function App() {
               size="small"
               onChange={(e) => setLanguage(e.target.value as string)}
               disabled={!translate}
+              fullWidth={isMobile}
+              sx={{ minWidth: isMobile ? '100%' : 180 }}
             >
               <MenuItem value={'English'}>🇬🇧 English</MenuItem>
               <MenuItem value={'Finnish'}>🇫🇮 Finnish</MenuItem>
@@ -145,6 +149,8 @@ function App() {
               label="Tonality"
               size="small"
               onChange={(e) => setTonality(e.target.value as string)}
+              fullWidth={isMobile}
+              sx={{ minWidth: isMobile ? '100%' : 140 }}
             >
               <MenuItem value={'Formal'}>Formal</MenuItem>
               <MenuItem value={'Informal'}>Informal</MenuItem>
@@ -157,6 +163,8 @@ function App() {
               label="Styling"
               size="small"
               onChange={(e) => setStyling(e.target.value as string)}
+              fullWidth={isMobile}
+              sx={{ minWidth: isMobile ? '100%' : 160 }}
             >
               <MenuItem value={'Paragraph'}>Paragraph</MenuItem>
               <MenuItem value={'Bullet Points'}>Bullet Points</MenuItem>
@@ -169,12 +177,14 @@ function App() {
               label="Model Provider"
               size="small"
               onChange={(e) => setModelProvider(e.target.value as string)}
+              fullWidth={isMobile}
+              sx={{ minWidth: isMobile ? '100%' : 140 }}
             >
               <MenuItem value={'openai'}>OpenAI</MenuItem>
               <MenuItem value={'google'}>Google</MenuItem>
             </Select>
 
-            <FormGroup>
+            <FormGroup sx={{ width: isMobile ? '100%' : 'auto' }}>
               <FormControlLabel
                 control={<Switch checked={theme} onChange={handleThemeChange} />}
                 label="Dark Mode"
@@ -192,16 +202,16 @@ function App() {
               label="Enter text to summarize or translate  (or drop a file here)"
               variant="outlined"
               multiline
-              rows={20}
+              rows={isMobile ? 12 : 20}
               fullWidth
               onChange={(e) => setInputToLocalStorage(e.target.value as string)}
             />
           </Box>
 
-          <Box className="submit-row"  sx={{ display: 'flex', gap: 2, mt: 2 }}>
-            <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading}>Clear</Button>
+          <Box className="submit-row"  sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 2, mt: 2, width: '100%' }}>
+            <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading} fullWidth={isMobile}>Clear</Button>
 
-            <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
+            <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading} fullWidth={isMobile}>
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
             </Button>
           </Box>
@@ -213,7 +223,7 @@ function App() {
             label="Summary"
             variant="outlined"
             multiline
-            rows={8}
+            rows={isMobile ? 6 : 8}
             fullWidth
             value={summary}
             margin="normal"
