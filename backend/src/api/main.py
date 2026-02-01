@@ -17,7 +17,6 @@ app.add_middleware(
 class Summary(BaseModel):
     text: str
     target_language: str | None = None
-    word_limit: int | None = None
 
 class SummaryOutput(BaseModel):
     summarized_text: str
@@ -31,11 +30,9 @@ def summarize(summary: Summary):
     settings = get_settings()
     client = OpenAI(api_key=settings.openai_api_key)
 
-    content = f"Summarize the given text into 1 paragraph."
-    if summary.word_limit:
-        content += f" Limit the summary to {summary.word_limit} words."
-    if summary.target_language:
-        content += f" Translate the output to {summary.target_language}."
+    content = "You are a helpful medical assistant that summarizes doctor's discussion transcripts with patients, or any other textual data. You summarize the given text into 1 paragraph."
+    if summary.target_language is not None:
+        content += f" Translate the output to {summary.target_language} and return only the translated text."
 
     response = client.responses.parse(
         model="gpt-4o-mini",
