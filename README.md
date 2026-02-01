@@ -1,7 +1,7 @@
 # Transcript Summarization & Translation
 
 A web application for summarizing and translating medical transcripts using LLMs (OpenAI or Gemini).  
-Frontend built with React + MUI, backend with FastAPI.
+Frontend built with React + Material UI components, backend with FastAPI.
 
 Also runs on AWS EC2, and is accessible via: http://13.49.229.238/
 
