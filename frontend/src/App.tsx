@@ -64,6 +64,22 @@ function App() {
     setTheme(event.target.checked);
   }
 
+  const handleFileDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      const text = await file.text();
+      const inputField = document.getElementById('inputField') as HTMLInputElement;
+      inputField.value = text;
+      setInputToLocalStorage(text);
+      inputField.focus();
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
   return (
     <>
       <ThemeProvider theme={theme ? darkTheme : lightTheme}>
@@ -97,15 +113,21 @@ function App() {
             </Select>
           </Box>
 
-          <TextField
-            id="inputField"
-            label="Enter text to summarize or translate"
-            variant="outlined"
-            multiline
-            rows={20}
-            fullWidth
-            onChange={(e) => setInputToLocalStorage(e.target.value as string)}
-          />
+          <Box
+            onDrop={handleFileDrop}
+            onDragOver={handleDragOver}
+            sx={{ width: '100%' }}
+          >
+            <TextField
+              id="inputField"
+              label="Enter text to summarize or translate  (or drop a file here)"
+              variant="outlined"
+              multiline
+              rows={20}
+              fullWidth
+              onChange={(e) => setInputToLocalStorage(e.target.value as string)}
+            />
+          </Box>
 
           <Box className="submit-row">
             <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading}>
