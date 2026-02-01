@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+from src.config import get_settings
 
 app = FastAPI()
 
@@ -17,9 +19,8 @@ class Summary(BaseModel):
     target_language: str | None = None
     word_limit: int | None = None
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+class SummaryOutput(BaseModel):
+    summarized_text: str
 
 @app.get("/health")
 def health_check():
@@ -27,6 +28,28 @@ def health_check():
 
 @app.post("/summarize")
 def summarize(summary: Summary):
-    # Placeholder for summarization logic
-    summarized_text = f"Summarized text within {summary.word_limit} words"
-    return {"summarized_text": summarized_text}
+    settings = get_settings()
+    client = OpenAI(api_key=settings.openai_api_key)
+
+    content = f"Summarize the given text into 1 paragraph."
+    if summary.word_limit:
+        content += f" Limit the summary to {summary.word_limit} words."
+    if summary.target_language:
+        content += f" Translate the output to {summary.target_language}."
+
+    response = client.responses.parse(
+        model="gpt-4o-mini",
+        input=[
+            {
+                "role": "system",
+                "content": "You are a helpful medical assistant that summarizes doctor's discussion transcripts with patients, or any other textual data."
+            },
+            {
+                "role": "user",
+                "content": f"{content}\n\nText to summarize: {summary.text}"
+            }
+        ],
+        text_format=SummaryOutput,
+    )
+
+    return response.output_parsed
