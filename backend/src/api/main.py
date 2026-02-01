@@ -1,14 +1,18 @@
+import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from src.config import get_settings
 
 app = FastAPI()
+settings = get_settings()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Or "*" for all, but specify for security
+    allow_origins=settings.get_cors_origins_list(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,3 +71,15 @@ def summarize(summary: Summary):
     )
 
     return SummaryOutput(summarized_text=response.choices[0].message.content)
+
+
+# Static file serving for production (frontend)
+# This must be after API routes to avoid conflicts
+static_dir = os.path.join(os.path.dirname(__file__), "..", "..", "static")
+if os.path.exists(static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve the SPA for all non-API routes."""
+        return FileResponse(os.path.join(static_dir, "index.html"))

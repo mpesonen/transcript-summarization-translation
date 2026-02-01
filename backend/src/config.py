@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     openai_api_key: str
     google_api_key: str
 
+    # CORS configuration - comma-separated list of origins
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    def get_cors_origins_list(self) -> list[str]:
+        """Parse comma-separated CORS origins into a list."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
