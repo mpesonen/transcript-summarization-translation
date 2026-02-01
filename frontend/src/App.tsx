@@ -23,6 +23,8 @@ function App() {
   const [loading, setLoading] = React.useState(false);
   const [summary, setSummary] = React.useState<string | null>(null);
   const [theme, setTheme] = React.useState(true);
+  const [tonality, setTonality] = React.useState('Formal');
+  const [styling, setStyling] = React.useState('Paragraph');
 
   // Input text caching in LocalStorage (survives page reloads)
   const setInputToLocalStorage = (input: string) => {
@@ -44,7 +46,7 @@ function App() {
     setLoading(true);
     try {
       setSummary(null);
-      const summary = await summarizeText(userInput, translate ? language : null);
+      const summary = await summarizeText(userInput, translate ? language : null, tonality, styling);
       setSummary(summary);
     } catch (error) {
       alert('Error summarizing text: ' + error);
@@ -111,6 +113,35 @@ function App() {
               <MenuItem value={'French'}>🇫🇷 French</MenuItem>
               <MenuItem value={'German'}>🇩🇪 German</MenuItem>
             </Select>
+            <Select
+              labelId="tonality-select-label"
+              id="tonality-select"
+              value={tonality}
+              label="Tonality"
+              size="small"
+              onChange={(e) => setTonality(e.target.value as string)}
+            >
+              <MenuItem value={'Formal'}>Formal</MenuItem>
+              <MenuItem value={'Informal'}>Informal</MenuItem>
+            </Select>
+            <Select
+              labelId="styling-select-label"
+              id="styling-select"
+              value={styling}
+              label="Styling"
+              size="small"
+              onChange={(e) => setStyling(e.target.value as string)}
+            >
+              <MenuItem value={'Paragraph'}>Paragraph</MenuItem>
+              <MenuItem value={'Bullet Points'}>Bullet Points</MenuItem>
+            </Select>
+
+            <FormGroup>
+              <FormControlLabel
+                control={<Switch checked={theme} onChange={handleThemeChange} />}
+                label="Dark Mode"
+              />
+            </FormGroup>
           </Box>
 
           <Box
@@ -154,13 +185,6 @@ function App() {
             }}
           />
         )}
-
-        <FormGroup>
-          <FormControlLabel
-            control={<Switch checked={theme} onChange={handleThemeChange} />}
-            label="Dark Mode"
-          />
-        </FormGroup>
       </ThemeProvider>
     </>
   )
