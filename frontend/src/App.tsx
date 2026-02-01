@@ -15,6 +15,20 @@ function App() {
   const [language, setLanguage] =  React.useState('English');
   const [translate, setTranslate] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [summary, setSummary] = React.useState<string | null>(null);
+
+  // Input text caching in LocalStorage (survives page reloads)
+  const setInputToLocalStorage = (input: string) => {
+    localStorage.setItem('userInput', input);
+  };
+
+  React.useEffect(() => {
+    const savedInput = localStorage.getItem('userInput');
+    if (savedInput) {
+      const inputField = document.getElementById('inputField') as HTMLInputElement;
+      inputField.value = savedInput;
+    }
+  }, []);
 
   const handleSubmit = async () => {
     const inputField = document.getElementById('inputField') as HTMLInputElement;
@@ -22,8 +36,9 @@ function App() {
 
     setLoading(true);
     try {
+      setSummary(null);
       const summary = await summarizeText(userInput, translate ? language : null);
-      inputField.value = summary;
+      setSummary(summary);
     } catch (error) {
       alert('Error summarizing text: ' + error);
     } finally {
@@ -69,7 +84,24 @@ function App() {
             multiline
             rows={20}
             fullWidth
+            onChange={(e) => setInputToLocalStorage(e.target.value as string)}
           />
+
+          {summary && (
+            <TextField
+              id="outputField"
+              label="Summary"
+              variant="outlined"
+              multiline
+              rows={8}
+              fullWidth
+              value={summary}
+              margin="normal"
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          )}
 
           <Box className="submit-row">
             <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
