@@ -17,6 +17,14 @@ const lightTheme = createTheme({
   },
 });
 
+const containsFinnishSSN = (text: string): boolean => {
+  // Finnish SSN format: DDMMYYXNNNT
+  // X = '+' (1800s), '-' (1900s), or 'A' (2000s)
+  // T = digit or letter
+  const finnishSSNPattern = /\d{6}[-+A]\d{3}[0-9A-Z]/i;
+  return finnishSSNPattern.test(text);
+};
+
 function App() {
   const [language, setLanguage] =  React.useState('English');
   const [translate, setTranslate] = React.useState(false);
@@ -51,6 +59,11 @@ function App() {
   const handleSubmit = async () => {
     const inputField = document.getElementById('inputField') as HTMLInputElement;
     const userInput = inputField.value;
+
+    if (containsFinnishSSN(userInput)) {
+      alert("Input contains a Finnish SSN. Please remove it before submitting.");
+      return;
+    }
 
     setLoading(true);
     try {
