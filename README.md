@@ -34,7 +34,9 @@ transcript-summarization-translation/
 │   │   ├── App.tsx             # Main React app
 │   │   └── services/api.ts     # API call helpers
 │   └── package.json            # Node dependencies
-├── Dockerfile                  # Multi-stage build for deployment
+├── docker-compose.yml          # Local/production orchestration (frontend + backend)
+├── backend/Dockerfile          # FastAPI image definition
+├── frontend/Dockerfile         # React + Nginx image definition
 └── README.md
 ```
 
@@ -58,7 +60,7 @@ cd backend
 uv sync
 ```
 
-Create a `.env` file in `backend/`:
+Create a `.env` file in `backend/` (you can start from `backend/.env.example`):
 
 ```
 OPENAI_API_KEY=sk-...
@@ -112,21 +114,53 @@ uv run pytest
 
 ---
 
-## Docker Deployment
+## Docker Compose Deployment
 
-Build and run the application in a single container:
+Run the frontend (Nginx) and backend (FastAPI) as separate services with Docker Compose:
 
 ```sh
-docker build -t transcript-summarizer .
-docker run -p 8000:8000 \
-  -e OPENAI_API_KEY=your-key \
-  -e GOOGLE_API_KEY=your-key \
-  transcript-summarizer
+cp backend/.env.example backend/.env   # then update the keys
+docker compose up --build
 ```
 
-Open [http://localhost:8000](http://localhost:8000) - both frontend and API are served from the same container.
+- Frontend: [http://localhost:8080](http://localhost:8080)
+- Backend API (optional direct access): [http://localhost:8000/health](http://localhost:8000/health)
 
-For AWS App Runner deployment, see the [deployment plan](.claude/plans/quizzical-stargazing-thompson.md).
+The frontend container serves the compiled React app and proxies `/api/*` requests to the backend service, so the browser never needs to reach port 8000 directly.
+
+---
+
+## AWS EC2 Deployment
+
+You can run the same Docker Compose stack on a small EC2 instance instead of App Runner:
+
+1. **Provision EC2**
+   - Recommended: Amazon Linux 2023 or Ubuntu 22.04, t3.small or larger
+   - Open inbound ports `80` (HTTP) and `443` (if you plan to terminate TLS with a reverse proxy) plus `8080/8000` temporarily for testing
+2. **Install Docker & Compose Plugin**
+   ```sh
+   sudo yum update -y
+   sudo yum install -y docker
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker ec2-user
+   sudo mkdir -p /usr/local/lib/docker/cli-plugins
+   sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 \
+        -o /usr/local/lib/docker/cli-plugins/docker-compose
+   sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+   ```
+   (Adjust package commands if using Ubuntu.)
+3. **Deploy the stack**
+   ```sh
+   git clone https://github.com/yourusername/transcript-summarization-translation.git
+   cd transcript-summarization-translation
+   cp backend/.env.example backend/.env   # add your production secrets
+   docker compose up --build -d
+   ```
+4. **Expose traffic**
+   - Option A: Create an EC2 security-group rule for port 80 and point DNS directly at the instance.
+   - Option B: Place the instance behind an Application Load Balancer or CloudFront + ACM for TLS.
+
+For rolling updates, pull latest changes (`git pull`), rebuild the images with `docker compose build`, and restart using `docker compose up -d`.
 
 ---
 
@@ -143,4 +177,3 @@ For AWS App Runner deployment, see the [deployment plan](.claude/plans/quizzical
 ## License
 
 MIT License
-

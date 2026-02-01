@@ -176,7 +176,7 @@ function App() {
 
             <FormGroup>
               <FormControlLabel
-                control={<Switch checked={theme} defaultChecked onChange={handleThemeChange} />}
+                control={<Switch checked={theme} onChange={handleThemeChange} />}
                 label="Dark Mode"
               />
             </FormGroup>
