@@ -25,6 +25,7 @@ function App() {
   const [theme, setTheme] = React.useState(true);
   const [tonality, setTonality] = React.useState('Formal');
   const [styling, setStyling] = React.useState('Paragraph');
+  const [modelProvider, setModelProvider] = React.useState('openai');
 
   // Input text caching in LocalStorage (survives page reloads)
   const setInputToLocalStorage = (input: string) => {
@@ -37,6 +38,14 @@ function App() {
       const inputField = document.getElementById('inputField') as HTMLInputElement;
       inputField.value = savedInput;
     }
+
+    // Also cache theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setTheme(true);
+    } else {
+      setTheme(false);
+    }
   }, []);
 
   const handleSubmit = async () => {
@@ -46,7 +55,7 @@ function App() {
     setLoading(true);
     try {
       setSummary(null);
-      const summary = await summarizeText(userInput, translate ? language : null, tonality, styling);
+      const summary = await summarizeText(userInput, translate ? language : null, tonality, styling, modelProvider);
       setSummary(summary);
     } catch (error) {
       alert('Error summarizing text: ' + error);
@@ -64,6 +73,7 @@ function App() {
 
   const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTheme(event.target.checked);
+    localStorage.setItem('theme', event.target.checked ? 'dark' : 'light');
   }
 
   const handleFileDrop = async (event: React.DragEvent<HTMLDivElement>) => {
@@ -96,7 +106,8 @@ function App() {
                 control={<Switch checked={translate} onChange={(e) => setTranslate(e.target.checked)} />}
                 label="Translate"
               />
-            </FormGroup>            
+            </FormGroup>
+
             <Select
               labelId="translate-select-label"
               id="translate-select"
@@ -113,6 +124,7 @@ function App() {
               <MenuItem value={'French'}>🇫🇷 French</MenuItem>
               <MenuItem value={'German'}>🇩🇪 German</MenuItem>
             </Select>
+
             <Select
               labelId="tonality-select-label"
               id="tonality-select"
@@ -124,6 +136,7 @@ function App() {
               <MenuItem value={'Formal'}>Formal</MenuItem>
               <MenuItem value={'Informal'}>Informal</MenuItem>
             </Select>
+
             <Select
               labelId="styling-select-label"
               id="styling-select"
@@ -134,6 +147,18 @@ function App() {
             >
               <MenuItem value={'Paragraph'}>Paragraph</MenuItem>
               <MenuItem value={'Bullet Points'}>Bullet Points</MenuItem>
+            </Select>
+
+            <Select
+              labelId="provided-select-label"
+              id="provider-select"
+              value={modelProvider}
+              label="Model Provider"
+              size="small"
+              onChange={(e) => setModelProvider(e.target.value as string)}
+            >
+              <MenuItem value={'openai'}>OpenAI</MenuItem>
+              <MenuItem value={'google'}>Google</MenuItem>
             </Select>
 
             <FormGroup>
@@ -160,10 +185,9 @@ function App() {
             />
           </Box>
 
-          <Box className="submit-row">
-            <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading}>
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Clear'}
-            </Button>
+          <Box className="submit-row"  sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Button variant="contained" color="secondary" onClick={handleClearInput} disabled={loading}>Clear</Button>
+
             <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
             </Button>

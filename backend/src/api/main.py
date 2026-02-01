@@ -19,6 +19,7 @@ class Summary(BaseModel):
     target_language: str | None = None
     tonality: str | None = None
     styling: str | None = None
+    model: str | None = None
 
 class SummaryOutput(BaseModel):
     summarized_text: str
@@ -30,15 +31,14 @@ def health_check():
 @app.post("/summarize")
 def summarize(summary: Summary):
     settings = get_settings()
-    model_provider = "openai"
+    model_provider = summary.model if summary.model else "openai"
     model = ""
-    # model_provider = "google"  # Future use
 
     if model_provider == "openai":
         client = OpenAI(api_key=settings.openai_api_key)
         model = settings.llm_model_openai
     else:
-        client = OpenAI(api_key=settings.google_api_key)  # Placeholder for Google client
+        client = OpenAI(api_key=settings.google_api_key, base_url="https://generativelanguage.googleapis.com/v1beta/openai/")  # Google can be called via OpenAI SDK (=effective model abstraction up to a point)
         model = settings.llm_model_google
 
     content = ""
@@ -52,9 +52,9 @@ def summarize(summary: Summary):
         else:
             content += f" Format the summary using text paragraph styling."
 
-    response = client.responses.parse(
+    response = client.chat.completions.create(
         model=model,
-        input=[
+        messages=[
             {
                 "role": "system",
                 "content": "You are a helpful medical assistant that summarizes doctor's discussion transcripts with patients, or any other textual data. You summarize the given text into 1 paragraph, unless broken into multiple bullet points."
@@ -64,7 +64,6 @@ def summarize(summary: Summary):
                 "content": f"{content}\n\nText to summarize: {summary.text}"
             }
         ],
-        text_format=SummaryOutput,
     )
 
-    return response.output_parsed
+    return SummaryOutput(summarized_text=response.choices[0].message.content)
